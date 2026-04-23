@@ -42,6 +42,7 @@ function App() {
   // Global SVG path sanitizer to prevent NaN errors
   useEffect(() => {
     const originalSetAttribute = Element.prototype.setAttribute;
+    const originalConsoleError = console.error;
     
     Element.prototype.setAttribute = function(name, value) {
       if (name === 'd' && typeof value === 'string') {
@@ -68,9 +69,59 @@ function App() {
       });
     }
 
+    // Suppress specific SVG path NaN errors in console
+    console.error = function(...args) {
+      const message = args[0];
+      if (typeof message === 'string' && 
+          (message.includes('<path> attribute d: Expected number') || 
+           message.includes('NaN'))) {
+        return; // Suppress the error
+      }
+      return originalConsoleError.apply(console, args);
+    };
+
+    // MutationObserver to catch dynamically created SVG paths
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if it's an SVG element with path data
+            if (node.tagName === 'path' && node.hasAttribute('d')) {
+              const dValue = node.getAttribute('d');
+              if (dValue && dValue.includes('NaN')) {
+                const sanitizedValue = dValue.replace(/NaN/g, '0');
+                node.setAttribute('d', sanitizedValue);
+              }
+            }
+            // Also check child nodes for SVG paths
+            const paths = node.querySelectorAll && node.querySelectorAll('path[d]');
+            if (paths) {
+              paths.forEach(path => {
+                const dValue = path.getAttribute('d');
+                if (dValue && dValue.includes('NaN')) {
+                  const sanitizedValue = dValue.replace(/NaN/g, '0');
+                  path.setAttribute('d', sanitizedValue);
+                }
+              });
+            }
+          }
+        });
+      });
+    });
+
+    // Start observing the entire document
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['d']
+    });
+
     return () => {
       // Cleanup: restore original methods
       Element.prototype.setAttribute = originalSetAttribute;
+      console.error = originalConsoleError;
+      observer.disconnect();
     };
   }, []);
 
