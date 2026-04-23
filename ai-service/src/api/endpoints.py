@@ -7,13 +7,13 @@ import os
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from services.ml_engine import MLEngine
+from services.simple_ml_engine import SimpleMLEngine
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["*"])
 
 # Initialize ML Engine
-ml_engine = MLEngine()
+ml_engine = SimpleMLEngine()
 
 def load_data_from_request(payload):
     """Load and validate data from request payload"""
