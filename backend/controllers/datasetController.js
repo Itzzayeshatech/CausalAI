@@ -1,35 +1,60 @@
 const fs = require('fs');
 const path = require('path');
 const Dataset = require('../models/Dataset');
-const { parseDatasetFile, createMeta } = require('../services/fileService');
+const DataPipeline = require('../utils/dataPipeline');
 
 const uploadDataset = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No dataset file uploaded' });
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No dataset file uploaded' });
+    }
+
+    const filePath = req.file.path;
+    const fileType = req.file.mimetype;
+    const fileName = req.file.originalname;
+    const fileSize = req.file.size;
+    const name = req.body.name || fileName;
+    const description = req.body.description || '';
+
+    // Validate file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(400).json({ message: 'File not found on server' });
+    }
+
+    // Parse file using new data pipeline
+    const rows = await DataPipeline.parseDatasetFile(filePath, fileType);
+    const meta = DataPipeline.createMeta(rows);
+
+    // Create dataset record
+    const dataset = await Dataset.create({
+      user: req.user._id,
+      name,
+      description,
+      fileName,
+      fileType,
+      fileSize,
+      filePath,
+      meta
+    });
+
+    res.status(201).json({ 
+      message: 'Dataset uploaded successfully', 
+      dataset: {
+        id: dataset._id,
+        name: dataset.name,
+        fileName: dataset.fileName,
+        fileSize: dataset.fileSize,
+        rowCount: dataset.meta.rowCount,
+        columns: dataset.meta.columns
+      }
+    });
+  } catch (error) {
+    console.error('Dataset upload error:', error);
+    res.status(500).json({ 
+      message: 'Dataset upload failed', 
+      error: error.message 
+    });
   }
-
-  const filePath = req.file.path;
-  const fileType = req.file.mimetype;
-  const fileName = req.file.originalname;
-  const fileSize = req.file.size;
-  const name = req.body.name || fileName;
-  const description = req.body.description || '';
-
-  const rows = await parseDatasetFile(filePath, fileType);
-  const meta = createMeta(rows);
-
-  const dataset = await Dataset.create({
-    user: req.user._id,
-    name,
-    description,
-    fileName,
-    fileType,
-    fileSize,
-    filePath,
-    meta
-  });
-
-  res.status(201).json({ message: 'Dataset uploaded', dataset });
 };
 
 const listDatasets = async (req, res) => {
