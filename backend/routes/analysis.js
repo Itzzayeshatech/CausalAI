@@ -27,10 +27,12 @@ router.post('/root-cause', protect, async (req, res) => {
         'intercept': 1800.22,
         'score': 0.87
       },
-      importance: [
-        { 'feature': 'Traffic', 'score': 0.92 },
-        { 'feature': 'MarketingSpend', 'score': 0.88 }
-      ],
+      importance: {
+        'Traffic': 0.92,
+        'MarketingSpend': 0.88,
+        'Price': 0.60,
+        'Inventory': 0.42
+      },
       rootCause: {
         'feature': 'Traffic',
         'correlation': 0.92,
