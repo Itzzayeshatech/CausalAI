@@ -170,7 +170,7 @@ router.post('/what-if', protect, async (req, res) => {
     const userScenarios = changes && changes.length > 0 ? changes : generateDefaultScenarios(targetName);
     
     const processedScenarios = userScenarios.map((change, index) => {
-      const impact = calculateDynamicScenarioImpact(change.variable, change.deltaPercent, baseline, seed);
+      const impact = calculateDynamicScenarioImpact(change.variable, change.deltaPercent, baseline, seed, targetName);
       return {
         id: `scenario_${index + 1}`,
         variable: change.variable,
@@ -264,7 +264,7 @@ function generateDefaultScenarios(target) {
   return defaultScenarios[target] || defaultScenarios.default;
 }
 
-function calculateDynamicScenarioImpact(variable, deltaPercent, baseline, seed) {
+function calculateDynamicScenarioImpact(variable, deltaPercent, baseline, seed, target) {
   // Generate variable-specific multipliers
   const multipliers = {
     'MarketingSpend': 0.9,
