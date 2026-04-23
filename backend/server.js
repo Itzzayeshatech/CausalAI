@@ -32,7 +32,17 @@ app.use('/api/analysis', analysisRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'CausalAI backend is running' });
+  res.json({ message: 'CausalAI backend is running', port: PORT, env: process.env.NODE_ENV });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    service: 'CausalAI Backend',
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    env: process.env.NODE_ENV
+  });
 });
 
 app.use(notFound);
