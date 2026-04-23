@@ -31,7 +31,7 @@ function App() {
   const showToast = (message, type = 'success') => setToast({ message, type });
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-slate-950 text-slate-100">
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <div className="flex">

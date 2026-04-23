@@ -20,12 +20,12 @@ const loginValidation = [
 ];
 
 const rootCauseValidation = [
-  body('datasetId').isMongoId().withMessage('Valid dataset ID is required'),
+  body('datasetId').notEmpty().withMessage('Dataset ID is required'),
   body('targetColumn').notEmpty().withMessage('Target column is required')
 ];
 
 const whatIfValidation = [
-  body('datasetId').isMongoId().withMessage('Valid dataset ID is required'),
+  body('datasetId').notEmpty().withMessage('Dataset ID is required'),
   body('changes').isArray({ min: 1 }).withMessage('At least one scenario change is required')
 ];
 

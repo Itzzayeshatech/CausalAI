@@ -6,7 +6,15 @@ const xlsx = require('xlsx');
 const parseCsvFile = (filePath) => {
   return new Promise((resolve, reject) => {
     const rows = [];
-    fs.createReadStream(filePath)
+    // Ensure we have an absolute path
+    const absolutePath = path.resolve(filePath);
+    
+    // Check if file exists before trying to read
+    if (!fs.existsSync(absolutePath)) {
+      return reject(new Error(`File not found: ${absolutePath}`));
+    }
+    
+    fs.createReadStream(absolutePath)
       .pipe(csv())
       .on('data', (data) => rows.push(data))
       .on('end', () => resolve(rows))
@@ -15,7 +23,15 @@ const parseCsvFile = (filePath) => {
 };
 
 const parseExcelFile = (filePath) => {
-  const workbook = xlsx.readFile(filePath);
+  // Ensure we have an absolute path
+  const absolutePath = path.resolve(filePath);
+  
+  // Check if file exists before trying to read
+  if (!fs.existsSync(absolutePath)) {
+    throw new Error(`File not found: ${absolutePath}`);
+  }
+  
+  const workbook = xlsx.readFile(absolutePath);
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   return xlsx.utils.sheet_to_json(sheet, { defval: null });
