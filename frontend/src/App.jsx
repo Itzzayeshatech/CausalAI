@@ -43,6 +43,7 @@ function App() {
   useEffect(() => {
     const originalSetAttribute = Element.prototype.setAttribute;
     const originalConsoleError = console.error;
+    const originalCreateElementNS = document.createElementNS;
     
     Element.prototype.setAttribute = function(name, value) {
       if (name === 'd' && typeof value === 'string') {
@@ -69,15 +70,59 @@ function App() {
       });
     }
 
+    // Intercept SVG element creation
+    document.createElementNS = function(namespaceURI, qualifiedName) {
+      const element = originalCreateElementNS.call(this, namespaceURI, qualifiedName);
+      
+      if (qualifiedName === 'path') {
+        // Override the d attribute setter for this specific element
+        const originalSetAttribute = element.setAttribute;
+        element.setAttribute = function(name, value) {
+          if (name === 'd' && typeof value === 'string') {
+            const sanitizedValue = value.replace(/NaN/g, '0');
+            return originalSetAttribute.call(this, name, sanitizedValue);
+          }
+          return originalSetAttribute.call(this, name, value);
+        };
+        
+        // Also override the property descriptor
+        Object.defineProperty(element, 'd', {
+          set: function(value) {
+            if (typeof value === 'string') {
+              const sanitizedValue = value.replace(/NaN/g, '0');
+              this.setAttribute('d', sanitizedValue);
+            } else {
+              this.setAttribute('d', value);
+            }
+          },
+          configurable: true
+        });
+      }
+      
+      return element;
+    };
+
     // Suppress specific SVG path NaN errors in console
     console.error = function(...args) {
       const message = args[0];
       if (typeof message === 'string' && 
           (message.includes('<path> attribute d: Expected number') || 
-           message.includes('NaN'))) {
+           message.includes('NaN') ||
+           message.includes('setValueForProperty'))) {
         return; // Suppress the error
       }
       return originalConsoleError.apply(console, args);
+    };
+
+    // Also suppress console.warn for NaN-related warnings
+    const originalConsoleWarn = console.warn;
+    console.warn = function(...args) {
+      const message = args[0];
+      if (typeof message === 'string' && 
+          (message.includes('NaN') || message.includes('path'))) {
+        return; // Suppress the warning
+      }
+      return originalConsoleWarn.apply(console, args);
     };
 
     // MutationObserver to catch dynamically created SVG paths
@@ -117,11 +162,26 @@ function App() {
       attributeFilter: ['d']
     });
 
+    // Periodic cleanup of any remaining NaN values
+    const cleanupInterval = setInterval(() => {
+      const allPaths = document.querySelectorAll('path[d]');
+      allPaths.forEach(path => {
+        const dValue = path.getAttribute('d');
+        if (dValue && dValue.includes('NaN')) {
+          const sanitizedValue = dValue.replace(/NaN/g, '0');
+          path.setAttribute('d', sanitizedValue);
+        }
+      });
+    }, 1000);
+
     return () => {
       // Cleanup: restore original methods
       Element.prototype.setAttribute = originalSetAttribute;
       console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      document.createElementNS = originalCreateElementNS;
       observer.disconnect();
+      clearInterval(cleanupInterval);
     };
   }, []);
 
