@@ -48,6 +48,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Handle favicon requests to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // Return No Content for favicon requests
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
