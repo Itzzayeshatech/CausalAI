@@ -39,6 +39,40 @@ def health_check():
         'version': '2.0.0'
     })
 
+@app.route('/warmup', methods=['GET'])
+def warmup():
+    """Warmup endpoint to prevent cold starts"""
+    try:
+        # Initialize ML engine with sample data
+        sample_data = {
+            'rows': [
+                {'feature1': 10, 'feature2': 20, 'target': 100},
+                {'feature1': 15, 'feature2': 25, 'target': 150},
+                {'feature1': 20, 'feature2': 30, 'target': 200}
+            ],
+            'datasetName': 'warmup-dataset',
+            'targetColumn': 'target'
+        }
+        
+        # Test analysis
+        result = ml_engine.analyze_root_cause(
+            pd.DataFrame(sample_data['rows']), 
+            sample_data['targetColumn'], 
+            sample_data['datasetName']
+        )
+        
+        return jsonify({
+            'status': 'warmed_up',
+            'service': 'CausalAI ML Engine',
+            'version': '2.0.0',
+            'test_analysis': 'success' if 'error' not in result else 'failed'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
 @app.route('/analyze', methods=['POST'])
 def analyze():
     """Main analysis endpoint"""
