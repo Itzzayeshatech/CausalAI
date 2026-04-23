@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: causalai-frontend
+    env: static
+    repo: https://github.com/Itzzayeshatech/CausalAI.git
+    rootDir: frontend
+    branch: main
+    buildCommand: npm run build
+    staticPublishPath: dist
+    plan: free
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://causalai-backend.onrender.com

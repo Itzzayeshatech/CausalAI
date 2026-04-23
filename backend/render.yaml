@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: causalai-backend
+    env: node
+    repo: https://github.com/Itzzayeshatech/CausalAI.git
+    rootDir: backend
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        value: mongodb://itzzzsiddique_db_user:Ayesha2005@ac-oj2psoe-shard-00-00.i2kkrbi.mongodb.net:27017,ac-oj2psoe-shard-00-01.i2kkrbi.mongodb.net:27017,ac-oj2psoe-shard-00-02.i2kkrbi.mongodb.net:27017/?ssl=true&replicaSet=atlas-zuvonh-shard-0&authSource=admin&appName=Cluster0
+      - key: JWT_SECRET
+        value: causalai-production-secret-key-2024
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: AI_SERVICE_URL
+        value: https://causalai-ml.onrender.com/analyze

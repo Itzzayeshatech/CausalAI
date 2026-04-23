@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: causalai-ml
+    env: python
+    repo: https://github.com/Itzzayeshatech/CausalAI.git
+    rootDir: ai-service
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    plan: free
+    envVars:
+      - key: AI_SERVICE_HOST
+        value: 0.0.0.0
+      - key: AI_SERVICE_PORT
+        value: 8000
+      - key: AI_SERVICE_DEBUG
+        value: false
