@@ -43,46 +43,56 @@ const AdvancedChart = ({
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
 
   const chartData = useMemo(() => {
-    if (!data) return [];
+    if (!data || !Array.isArray(data)) return [];
     
     // Helper function to safely convert to number and handle NaN
     const safeNumber = (value) => {
+      if (value === null || value === undefined) return 0;
       const num = Number(value);
-      return isNaN(num) ? 0 : num;
+      return isNaN(num) || !isFinite(num) ? 0 : num;
     };
+    
+    // Helper function to safely get xKey value
+    const safeXValue = (value) => {
+      if (value === null || value === undefined) return 'Unknown';
+      return String(value);
+    };
+    
+    // Filter out invalid data items first
+    const validData = data.filter(item => item && typeof item === 'object');
     
     // Data preprocessing based on chart type
     switch (type) {
       case 'line':
       case 'area':
-        return data.map(item => ({
+        return validData.map(item => ({
           ...item,
           [yKey]: safeNumber(item[yKey]),
-          [xKey]: item[xKey]
+          [xKey]: safeXValue(item[xKey])
         })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
       
       case 'bar':
-        return data.map(item => ({
+        return validData.map(item => ({
           ...item,
           [yKey]: safeNumber(item[yKey]),
-          [xKey]: item[xKey]
+          [xKey]: safeXValue(item[xKey])
         })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
       
       case 'scatter':
-        return data.map(item => ({
+        return validData.map(item => ({
           ...item,
           x: safeNumber(item[xKey]),
           y: safeNumber(item[yKey])
         })).filter(item => item.x !== null && item.x !== undefined && item.y !== null && item.y !== undefined);
       
       case 'pie':
-        return data.map(item => ({
-          name: item.name || item[xKey],
+        return validData.map(item => ({
+          name: item.name || item[xKey] || 'Unknown',
           value: safeNumber(item.value || item[yKey])
         })).filter(item => item.value !== null && item.value !== undefined && item.value > 0);
       
       default:
-        return data;
+        return validData;
     }
   }, [data, type, xKey, yKey]);
 

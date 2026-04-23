@@ -67,17 +67,17 @@ const DashboardPage = ({ showToast }) => {
     );
   }
 
-  // Prepare chart data
+  // Prepare chart data with safe number handling
   const datasetSizeData = datasets.slice(0, 8).map(dataset => ({
-    name: dataset.name.substring(0, 15) + (dataset.name.length > 15 ? '...' : ''),
-    size: Math.round(dataset.fileSize / 1024),
-    rows: dataset.meta?.rowCount || 0
+    name: dataset.name ? dataset.name.substring(0, 15) + (dataset.name.length > 15 ? '...' : '') : 'Unknown',
+    size: Math.round((dataset.fileSize || 0) / 1024) || 0,
+    rows: (dataset.meta?.rowCount || 0) || 0
   }));
 
   const analysisTrendData = analyses.slice(0, 10).map((analysis, index) => ({
-    date: new Date(analysis.createdAt).toLocaleDateString(),
+    date: analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString() : `Day ${index + 1}`,
     analyses: index + 1,
-    type: analysis.type
+    type: analysis.type || 'unknown'
   }));
 
   return (
