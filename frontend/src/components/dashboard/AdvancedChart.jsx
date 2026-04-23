@@ -26,6 +26,7 @@ import {
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
 import ChartErrorBoundary from './ChartErrorBoundary';
 import SafeChartWrapper from './SafeChartWrapper';
+import FallbackChart from './FallbackChart';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
@@ -43,6 +44,29 @@ const AdvancedChart = ({
   animationDuration = 1000
 }) => {
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
+  const [useFallback, setUseFallback] = useState(false);
+
+  // Error handler to detect NaN issues and switch to fallback
+  useEffect(() => {
+    const handleError = (event) => {
+      const message = event.message || event.error?.message || '';
+      if (message.includes('NaN') || message.includes('path') || message.includes('Expected number')) {
+        setUseFallback(true);
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+      return false;
+    };
+
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleError, true);
+
+    return () => {
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleError, true);
+    };
+  }, []);
 
   const chartData = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
@@ -413,13 +437,24 @@ const AdvancedChart = ({
 
       {/* Chart */}
       <div className="h-[300px]">
-        <SafeChartWrapper>
-          <ChartErrorBoundary>
-            <ResponsiveContainer width="100%" height={height}>
-              {renderChart()}
-            </ResponsiveContainer>
-          </ChartErrorBoundary>
-        </SafeChartWrapper>
+        {useFallback ? (
+          <FallbackChart
+            type={type}
+            data={chartData}
+            xKey={xKey}
+            yKey={yKey}
+            colors={colors}
+            height={height}
+          />
+        ) : (
+          <SafeChartWrapper>
+            <ChartErrorBoundary>
+              <ResponsiveContainer width="100%" height={height}>
+                {renderChart()}
+              </ResponsiveContainer>
+            </ChartErrorBoundary>
+          </SafeChartWrapper>
+        )}
       </div>
 
       {/* Footer */}
