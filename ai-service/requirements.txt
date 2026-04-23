@@ -1,0 +1,6 @@
+flask==2.3.3
+flask-cors==4.0.0
+pandas==2.2.3
+numpy==1.26.5
+scikit-learn==2.3.2
+pytest==8.2.2

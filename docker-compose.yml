@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - '27017:27017'
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env.example
+    ports:
+      - '5000:5000'
+    depends_on:
+      - mongo
+      - ai-service
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/causalai
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRES_IN=7d
+      - UPLOAD_DIR=uploads
+      - AI_SERVICE_URL=http://ai-service:8000/analyze
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - '3000:4173'
+    depends_on:
+      - backend
+
+  ai-service:
+    build:
+      context: ./ai-service
+    ports:
+      - '8000:8000'
+
+volumes:
+  mongo-data:
