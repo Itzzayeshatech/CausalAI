@@ -405,21 +405,140 @@ function calculateScenarioImpact(variable, deltaPercent, baseline) {
   };
 }
 
-// Mock analysis history endpoint
+// Enhanced analysis history endpoint
 router.get('/history', protect, (req, res) => {
   try {
-    res.json([
+    // Generate mock comprehensive analysis history
+    const now = new Date();
+    const history = [
       {
-        _id: 'mock-analysis-1',
+        _id: 'analysis-1',
         type: 'root-cause',
-        dataset: 'Sales',
+        dataset: 'Sales Dataset Q1',
         targetColumn: 'Sales',
-        createdAt: new Date().toISOString(),
-        result: { summary: 'Traffic is the strongest factor affecting Sales.' }
+        query: 'Root Cause Analysis on Sales Dataset Q1',
+        createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        result: {
+          dataset: 'Sales Dataset Q1',
+          targetColumn: 'Sales',
+          rootCause: {
+            feature: 'Traffic',
+            correlation: 0.92,
+            impact: 'High',
+            description: 'Traffic is the primary driver of Sales with 92% correlation.'
+          },
+          summary: 'Traffic is the strongest factor affecting Sales (92% correlation), followed by MarketingSpend (88%).',
+          insights: [
+            'Traffic shows the highest positive correlation with Sales',
+            'Marketing spend has strong positive impact on revenue',
+            'Price increases negatively affect sales volume'
+          ],
+          recommendations: [
+            'Increase marketing budget for traffic acquisition',
+            'Optimize pricing strategy to balance revenue and volume',
+            'Maintain adequate inventory levels'
+          ],
+          metadata: {
+            data_points: 1000,
+            features_analyzed: 6,
+            model_performance: {
+              r2_score: 0.87,
+              mae: 145.67,
+              rmse: 234.89
+            }
+          }
+        }
+      },
+      {
+        _id: 'analysis-2',
+        type: 'what-if',
+        dataset: 'Sales Dataset Q1',
+        targetColumn: 'Sales',
+        query: 'What-If Analysis: Marketing Spend Increase',
+        createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+        result: {
+          dataset: 'Sales Dataset Q1',
+          targetColumn: 'Sales',
+          scenarioName: 'Marketing Spend Increase',
+          simulation: {
+            baseline: 14500.0,
+            scenarios: [
+              {
+                variable: 'MarketingSpend',
+                deltaPercent: 20,
+                predicted: 15500.0,
+                impact: 1000.0,
+                impactPercent: 6.9,
+                confidence: 0.85,
+                description: 'Increase in MarketingSpend by 20% positively impacts Sales by 1000.00.'
+              }
+            ],
+            bestScenario: {
+              variable: 'MarketingSpend',
+              predicted: 15500.0,
+              impactPercent: 6.9
+            }
+          },
+          insights: [
+            'MarketingSpend increase shows highest positive impact on Sales (+6.9%)',
+            'Scenario testing helps identify optimal strategies for Sales optimization',
+            'Combined scenarios may produce synergistic effects'
+          ],
+          recommendations: [
+            'Prioritize MarketingSpend optimization for immediate Sales growth',
+            'Test scenarios in controlled environment before full implementation',
+            'Monitor Sales metrics closely during scenario testing'
+          ],
+          riskAssessment: {
+            lowRisk: ['Traffic increase', 'Moderate MarketingSpend increase'],
+            mediumRisk: ['Price reduction', 'High MarketingSpend increase'],
+            highRisk: ['Aggressive price cuts', 'Major spending increases']
+          }
+        }
+      },
+      {
+        _id: 'analysis-3',
+        type: 'root-cause',
+        dataset: 'Revenue Dataset Q1',
+        targetColumn: 'Revenue',
+        query: 'Root Cause Analysis on Revenue Dataset Q1',
+        createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        result: {
+          dataset: 'Revenue Dataset Q1',
+          targetColumn: 'Revenue',
+          rootCause: {
+            feature: 'Customers',
+            correlation: 0.89,
+            impact: 'High',
+            description: 'Customers is the primary driver of Revenue with 89% correlation.'
+          },
+          summary: 'Customers is the strongest factor affecting Revenue (89% correlation), followed by AvgOrderValue (76%).',
+          insights: [
+            'Customers shows the highest positive correlation with Revenue',
+            'Average order value has strong positive impact',
+            'Conversion rate improvements show moderate correlation'
+          ],
+          recommendations: [
+            'Focus on customer acquisition strategies',
+            'Implement upselling and cross-selling programs',
+            'Optimize conversion funnel'
+          ],
+          metadata: {
+            data_points: 1200,
+            features_analyzed: 6,
+            model_performance: {
+              r2_score: 0.91,
+              mae: 234.56,
+              rmse: 345.78
+            }
+          }
+        }
       }
-    ]);
+    ];
+    
+    res.json(history);
   } catch (error) {
-    console.error('History error:', error);
+    console.error('Analysis history error:', error);
     res.status(500).json({ message: 'Failed to fetch analysis history' });
   }
 });
