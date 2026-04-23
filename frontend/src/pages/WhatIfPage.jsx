@@ -39,7 +39,7 @@ const WhatIfPage = ({ showToast }) => {
     setLoading(true);
     try {
       const res = await api.post('/analysis/what-if', { datasetId: selectedDataset, targetColumn, changes, scenarioName });
-      setResult(res.data.result);
+      setResult(res.data);
       showToast('What-if simulation generated');
     } catch (err) {
       setError(err.response?.data?.message || 'What-if analysis failed');
@@ -91,9 +91,143 @@ const WhatIfPage = ({ showToast }) => {
         </form>
       </div>
       {result && (
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
-          <h2 className="text-2xl font-semibold text-white">Simulation result</h2>
-          <pre className="mt-4 whitespace-pre-wrap rounded-3xl bg-slate-950 p-5 text-sm text-slate-200">{JSON.stringify(result, null, 2)}</pre>
+        <div className="space-y-6">
+          {/* Simulation Overview */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">What-If Simulation Results</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="rounded-2xl bg-slate-950 p-4 text-center">
+                <p className="text-slate-400 text-sm">Baseline</p>
+                <p className="text-white text-2xl font-bold">{result.simulation?.baseline?.toFixed(2) || 'N/A'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-950 p-4 text-center">
+                <p className="text-slate-400 text-sm">Best Case</p>
+                <p className="text-green-400 text-2xl font-bold">{result.simulation?.bestScenario?.predicted?.toFixed(2) || 'N/A'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-950 p-4 text-center">
+                <p className="text-slate-400 text-sm">Worst Case</p>
+                <p className="text-red-400 text-2xl font-bold">{result.simulation?.worstScenario?.predicted?.toFixed(2) || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scenario Results */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">Scenario Analysis</h2>
+            <div className="space-y-4">
+              {(result.simulation?.scenarios || []).map((scenario, index) => (
+                <div key={scenario.id || index} className="rounded-2xl bg-slate-950 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-sky-400">{scenario.variable}</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      scenario.impact > 0 ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                    }`}>
+                      {scenario.impact > 0 ? '+' : ''}{scenario.impactPercent?.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <p className="text-slate-400">Change</p>
+                      <p className="text-white font-medium">{scenario.deltaPercent > 0 ? '+' : ''}{scenario.deltaPercent}%</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Predicted</p>
+                      <p className="text-white font-medium">{scenario.predicted?.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Impact</p>
+                      <p className="text-white font-medium">{scenario.impact?.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Confidence</p>
+                      <p className="text-white font-medium">{(scenario.confidence * 100)?.toFixed(0)}%</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-300 text-sm mt-2">{scenario.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Insights */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">Key Insights</h2>
+            <ul className="space-y-2">
+              {(result.insights || []).map((insight, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <span className="text-sky-400 mt-1">•</span>
+                  <span className="text-slate-200">{insight}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Recommendations */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">Strategic Recommendations</h2>
+            <ul className="space-y-2">
+              {(result.recommendations || []).map((rec, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <span className="text-green-400 mt-1">✓</span>
+                  <span className="text-slate-200">{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Risk Assessment */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">Risk Assessment</h2>
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-green-400 font-medium mb-2">Low Risk</h3>
+                <ul className="space-y-1">
+                  {(result.riskAssessment?.lowRisk || []).map((risk, index) => (
+                    <li key={index} className="text-slate-200 text-sm">• {risk}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-yellow-400 font-medium mb-2">Medium Risk</h3>
+                <ul className="space-y-1">
+                  {(result.riskAssessment?.mediumRisk || []).map((risk, index) => (
+                    <li key={index} className="text-slate-200 text-sm">• {risk}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-red-400 font-medium mb-2">High Risk</h3>
+                <ul className="space-y-1">
+                  {(result.riskAssessment?.highRisk || []).map((risk, index) => (
+                    <li key={index} className="text-slate-200 text-sm">• {risk}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Implementation Guide */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-card">
+            <h2 className="text-2xl font-semibold text-white mb-4">Implementation Guide</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-2xl bg-slate-950 p-4">
+                <h3 className="text-sky-400 font-medium mb-2">Timeline</h3>
+                <p className="text-slate-200">{result.implementation?.timeline || 'N/A'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-950 p-4">
+                <h3 className="text-sky-400 font-medium mb-2">Resources</h3>
+                <p className="text-slate-200">{result.implementation?.resources || 'N/A'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-950 p-4">
+                <h3 className="text-sky-400 font-medium mb-2">KPIs</h3>
+                <ul className="space-y-1">
+                  {(result.implementation?.kpis || []).map((kpi, index) => (
+                    <li key={index} className="text-slate-200 text-sm">• {kpi}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
