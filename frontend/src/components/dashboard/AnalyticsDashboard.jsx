@@ -42,13 +42,13 @@ const AnalyticsDashboard = () => {
       });
       
       setChartData([
-        { date: '2024-01-01', analyses: 45, accuracy: 89.2 },
-        { date: '2024-01-02', analyses: 67, accuracy: 91.1 },
-        { date: '2024-01-03', analyses: 89, accuracy: 87.6 },
-        { date: '2024-01-04', analyses: 123, accuracy: 92.3 },
-        { date: '2024-01-05', analyses: 98, accuracy: 88.9 },
-        { date: '2024-01-06', analyses: 156, accuracy: 90.1 },
-        { date: '2024-01-07', analyses: 134, accuracy: 91.8 },
+        { date: 'Jan 1', analyses: 45, accuracy: 89.2 },
+        { date: 'Jan 2', analyses: 67, accuracy: 91.1 },
+        { date: 'Jan 3', analyses: 89, accuracy: 87.6 },
+        { date: 'Jan 4', analyses: 123, accuracy: 92.3 },
+        { date: 'Jan 5', analyses: 98, accuracy: 88.9 },
+        { date: 'Jan 6', analyses: 156, accuracy: 90.1 },
+        { date: 'Jan 7', analyses: 134, accuracy: 91.8 },
       ]);
       
       setInsights({
@@ -155,7 +155,10 @@ const AnalyticsDashboard = () => {
           type="bar"
           title="Model Performance"
           subtitle="Accuracy over time"
-          data={chartData.map(item => ({ ...item, accuracy: item.accuracy * 100 }))}
+          data={chartData.map(item => ({ 
+            ...item, 
+            accuracy: (item.accuracy || 0) * 100 
+          }))}
           xKey="date"
           yKey="accuracy"
           height={300}
