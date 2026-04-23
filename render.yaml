@@ -23,7 +23,7 @@ services:
       - key: UPLOAD_DIR
         value: uploads
       - key: AI_SERVICE_URL
-        value: http://localhost:8000/analyze
+        value: https://causalai-ml.onrender.com/analyze
 
   # Frontend Service
   - type: web
