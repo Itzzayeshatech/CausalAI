@@ -39,6 +39,41 @@ function App() {
     }
   }, []);
 
+  // Global SVG path sanitizer to prevent NaN errors
+  useEffect(() => {
+    const originalSetAttribute = Element.prototype.setAttribute;
+    
+    Element.prototype.setAttribute = function(name, value) {
+      if (name === 'd' && typeof value === 'string') {
+        // Replace all NaN values in SVG path data with 0
+        const sanitizedValue = value.replace(/NaN/g, '0');
+        return originalSetAttribute.call(this, name, sanitizedValue);
+      }
+      return originalSetAttribute.call(this, name, value);
+    };
+
+    // Also handle direct property setting
+    const originalSetProperty = Object.getOwnPropertyDescriptor(Element.prototype, 'd')?.set;
+    
+    if (originalSetProperty) {
+      Object.defineProperty(Element.prototype, 'd', {
+        set: function(value) {
+          if (typeof value === 'string') {
+            const sanitizedValue = value.replace(/NaN/g, '0');
+            return originalSetProperty.call(this, sanitizedValue);
+          }
+          return originalSetProperty.call(this, value);
+        },
+        configurable: true
+      });
+    }
+
+    return () => {
+      // Cleanup: restore original methods
+      Element.prototype.setAttribute = originalSetAttribute;
+    };
+  }, []);
+
   const showToast = (message, type = 'success') => setToast({ message, type });
 
   return (
