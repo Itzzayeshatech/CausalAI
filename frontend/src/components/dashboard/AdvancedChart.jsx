@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
 import ChartErrorBoundary from './ChartErrorBoundary';
+import SafeChartWrapper from './SafeChartWrapper';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
@@ -412,11 +413,13 @@ const AdvancedChart = ({
 
       {/* Chart */}
       <div className="h-[300px]">
-        <ChartErrorBoundary>
-          <ResponsiveContainer width="100%" height="100%">
-            {renderChart()}
-          </ResponsiveContainer>
-        </ChartErrorBoundary>
+        <SafeChartWrapper>
+          <ChartErrorBoundary>
+            <ResponsiveContainer width="100%" height={height}>
+              {renderChart()}
+            </ResponsiveContainer>
+          </ChartErrorBoundary>
+        </SafeChartWrapper>
       </div>
 
       {/* Footer */}
