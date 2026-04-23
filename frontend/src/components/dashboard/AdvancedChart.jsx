@@ -24,8 +24,9 @@ import {
   Radar
 } from 'recharts';
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
+import ChartErrorBoundary from './ChartErrorBoundary';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
 const AdvancedChart = ({ 
   type, 
@@ -47,15 +48,15 @@ const AdvancedChart = ({
     
     // Helper function to safely convert to number and handle NaN
     const safeNumber = (value) => {
-      if (value === null || value === undefined) return 0;
+      if (value === null || value === undefined || value === '') return 0;
       const num = Number(value);
       return isNaN(num) || !isFinite(num) ? 0 : num;
     };
     
     // Helper function to safely get xKey value
     const safeXValue = (value) => {
-      if (value === null || value === undefined) return 'Unknown';
-      return String(value);
+      if (value === null || value === undefined || value === '') return 'Unknown';
+      return String(value).trim() || 'Unknown';
     };
     
     // Filter out invalid data items first
@@ -65,34 +66,75 @@ const AdvancedChart = ({
     switch (type) {
       case 'line':
       case 'area':
-        return validData.map(item => ({
-          ...item,
-          [yKey]: safeNumber(item[yKey]),
-          [xKey]: safeXValue(item[xKey])
-        })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
+        return validData.map(item => {
+          const yValue = safeNumber(item[yKey]);
+          const xValue = safeXValue(item[xKey]);
+          return {
+            ...item,
+            [yKey]: yValue,
+            [xKey]: xValue
+          };
+        }).filter(item => {
+          const yValue = item[yKey];
+          return yValue !== null && yValue !== undefined && !isNaN(yValue) && isFinite(yValue);
+        });
       
       case 'bar':
-        return validData.map(item => ({
-          ...item,
-          [yKey]: safeNumber(item[yKey]),
-          [xKey]: safeXValue(item[xKey])
-        })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
+        return validData.map(item => {
+          const yValue = safeNumber(item[yKey]);
+          const xValue = safeXValue(item[xKey]);
+          return {
+            ...item,
+            [yKey]: yValue,
+            [xKey]: xValue
+          };
+        }).filter(item => {
+          const yValue = item[yKey];
+          return yValue !== null && yValue !== undefined && !isNaN(yValue) && isFinite(yValue);
+        });
       
       case 'scatter':
-        return validData.map(item => ({
-          ...item,
-          x: safeNumber(item[xKey]),
-          y: safeNumber(item[yKey])
-        })).filter(item => item.x !== null && item.x !== undefined && item.y !== null && item.y !== undefined);
+        return validData.map(item => {
+          const xValue = safeNumber(item[xKey]);
+          const yValue = safeNumber(item[yKey]);
+          return {
+            ...item,
+            x: xValue,
+            y: yValue
+          };
+        }).filter(item => {
+          const xValue = item.x;
+          const yValue = item.y;
+          return xValue !== null && xValue !== undefined && !isNaN(xValue) && isFinite(xValue) &&
+                 yValue !== null && yValue !== undefined && !isNaN(yValue) && isFinite(yValue);
+        });
       
       case 'pie':
-        return validData.map(item => ({
-          name: item.name || item[xKey] || 'Unknown',
-          value: safeNumber(item.value || item[yKey])
-        })).filter(item => item.value !== null && item.value !== undefined && item.value > 0);
+        return validData.map(item => {
+          const value = safeNumber(item.value || item[yKey]);
+          const name = safeXValue(item.name || item[xKey]);
+          return {
+            name: name,
+            value: value
+          };
+        }).filter(item => {
+          const value = item.value;
+          return value !== null && value !== undefined && !isNaN(value) && isFinite(value) && value > 0;
+        });
       
       default:
-        return validData;
+        return validData.map(item => {
+          const yValue = safeNumber(item[yKey]);
+          const xValue = safeXValue(item[xKey]);
+          return {
+            ...item,
+            [yKey]: yValue,
+            [xKey]: xValue
+          };
+        }).filter(item => {
+          const yValue = item[yKey];
+          return yValue !== null && yValue !== undefined && !isNaN(yValue) && isFinite(yValue);
+        });
     }
   }, [data, type, xKey, yKey]);
 
@@ -138,6 +180,29 @@ const AdvancedChart = ({
           <div className="text-center">
             <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>No data available for chart</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Additional validation: ensure all data points have valid numeric values
+    const hasInvalidData = chartData.some(item => {
+      if (type === 'scatter') {
+        return !isFinite(item.x) || !isFinite(item.y);
+      } else if (type === 'pie') {
+        return !isFinite(item.value) || item.value <= 0;
+      } else {
+        return !isFinite(item[yKey]);
+      }
+    });
+
+    if (hasInvalidData) {
+      console.warn('Chart contains invalid data, preventing render');
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="text-center">
+            <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>Invalid data format for chart</p>
           </div>
         </div>
       );
@@ -327,9 +392,11 @@ const AdvancedChart = ({
 
       {/* Chart */}
       <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          {renderChart()}
-        </ResponsiveContainer>
+        <ChartErrorBoundary>
+          <ResponsiveContainer width="100%" height="100%">
+            {renderChart()}
+          </ResponsiveContainer>
+        </ChartErrorBoundary>
       </div>
 
       {/* Footer */}

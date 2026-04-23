@@ -157,7 +157,7 @@ const AnalyticsDashboard = () => {
           subtitle="Accuracy over time"
           data={chartData.map(item => ({ 
             ...item, 
-            accuracy: (item.accuracy || 0) * 100 
+            accuracy: ((item.accuracy || 0) * 100) || 0 
           }))}
           xKey="date"
           yKey="accuracy"
