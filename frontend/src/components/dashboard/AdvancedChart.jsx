@@ -45,35 +45,41 @@ const AdvancedChart = ({
   const chartData = useMemo(() => {
     if (!data) return [];
     
+    // Helper function to safely convert to number and handle NaN
+    const safeNumber = (value) => {
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    };
+    
     // Data preprocessing based on chart type
     switch (type) {
       case 'line':
       case 'area':
         return data.map(item => ({
           ...item,
-          [yKey]: Number(item[yKey]) || 0,
+          [yKey]: safeNumber(item[yKey]),
           [xKey]: item[xKey]
-        }));
+        })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
       
       case 'bar':
         return data.map(item => ({
           ...item,
-          [yKey]: Number(item[yKey]) || 0,
+          [yKey]: safeNumber(item[yKey]),
           [xKey]: item[xKey]
-        }));
+        })).filter(item => item[yKey] !== null && item[yKey] !== undefined);
       
       case 'scatter':
         return data.map(item => ({
           ...item,
-          x: Number(item[xKey]) || 0,
-          y: Number(item[yKey]) || 0
-        }));
+          x: safeNumber(item[xKey]),
+          y: safeNumber(item[yKey])
+        })).filter(item => item.x !== null && item.x !== undefined && item.y !== null && item.y !== undefined);
       
       case 'pie':
         return data.map(item => ({
           name: item.name || item[xKey],
-          value: Number(item.value || item[yKey]) || 0
-        }));
+          value: safeNumber(item.value || item[yKey])
+        })).filter(item => item.value !== null && item.value !== undefined && item.value > 0);
       
       default:
         return data;
@@ -115,6 +121,18 @@ const AdvancedChart = ({
   };
 
   const renderChart = () => {
+    // If no valid data, show a message instead of trying to render
+    if (!chartData || chartData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="text-center">
+            <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>No data available for chart</p>
+          </div>
+        </div>
+      );
+    }
+    
     switch (type) {
       case 'line':
         return (
