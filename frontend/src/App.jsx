@@ -28,6 +28,17 @@ function App() {
     return () => clearTimeout(timeout);
   }, [toast]);
 
+  // Add mock authentication for development
+  useEffect(() => {
+    const token = localStorage.getItem('causalai_token');
+    if (!token) {
+      // Create a mock JWT token for testing
+      const mockToken = 'mock_jwt_token_' + Date.now();
+      localStorage.setItem('causalai_token', mockToken);
+      localStorage.setItem('causalai_name', 'Test User');
+    }
+  }, []);
+
   const showToast = (message, type = 'success') => setToast({ message, type });
 
   return (

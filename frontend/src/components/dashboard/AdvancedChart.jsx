@@ -185,8 +185,28 @@ const AdvancedChart = ({
       );
     }
 
-    // Additional validation: ensure all data points have valid numeric values
-    const hasInvalidData = chartData.some(item => {
+    // Final validation: ensure all data points have valid numeric values
+    const sanitizedData = chartData.map(item => {
+      const sanitizedItem = { ...item };
+      
+      // Sanitize all possible numeric fields
+      Object.keys(sanitizedItem).forEach(key => {
+        const value = sanitizedItem[key];
+        if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+          sanitizedItem[key] = 0;
+        } else if (typeof value === 'string') {
+          const numValue = Number(value);
+          if (!isNaN(numValue) && isFinite(numValue)) {
+            sanitizedItem[key] = numValue;
+          }
+        }
+      });
+      
+      return sanitizedItem;
+    });
+
+    // Double-check for any remaining invalid data
+    const hasInvalidData = sanitizedData.some(item => {
       if (type === 'scatter') {
         return !isFinite(item.x) || !isFinite(item.y);
       } else if (type === 'pie') {
@@ -197,7 +217,7 @@ const AdvancedChart = ({
     });
 
     if (hasInvalidData) {
-      console.warn('Chart contains invalid data, preventing render');
+      console.warn('Chart contains invalid data after sanitization, preventing render');
       return (
         <div className="flex items-center justify-center h-full text-gray-500">
           <div className="text-center">
@@ -211,7 +231,7 @@ const AdvancedChart = ({
     switch (type) {
       case 'line':
         return (
-          <LineChart data={chartData}>
+          <LineChart data={sanitizedData}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />}
             <XAxis 
               dataKey={xKey} 
@@ -238,7 +258,7 @@ const AdvancedChart = ({
 
       case 'area':
         return (
-          <AreaChart data={chartData}>
+          <AreaChart data={sanitizedData}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />}
             <XAxis 
               dataKey={xKey} 
@@ -265,7 +285,7 @@ const AdvancedChart = ({
 
       case 'bar':
         return (
-          <BarChart data={chartData}>
+          <BarChart data={sanitizedData}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />}
             <XAxis 
               dataKey={xKey} 
@@ -289,7 +309,7 @@ const AdvancedChart = ({
 
       case 'scatter':
         return (
-          <ScatterChart data={chartData}>
+          <ScatterChart data={sanitizedData}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />}
             <XAxis 
               dataKey="x" 
@@ -314,7 +334,7 @@ const AdvancedChart = ({
         return (
           <PieChart>
             <Pie
-              data={chartData}
+              data={sanitizedData}
               cx="50%"
               cy="50%"
               labelLine={false}
@@ -324,7 +344,7 @@ const AdvancedChart = ({
               dataKey="value"
               animationDuration={animationDuration}
             >
-              {chartData.map((entry, index) => (
+              {sanitizedData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Pie>
